@@ -84,3 +84,49 @@ export interface ApiProbeResult {
   };
   serverTime: string;
 }
+
+export interface HealthCheckData {
+  status: 'healthy' | 'degraded' | 'error';
+  timestamp: string;
+  uptimeSeconds: number;
+  environment: string;
+  server: {
+    status: string;
+    port: number | string;
+    memory: {
+      rssMB: string;
+      heapUsedMB: string;
+      heapTotalMB: string;
+    };
+    cachedRecords: {
+      hdbRecords: number;
+      soraMonths: number;
+      cacheAgeSeconds: number;
+      ttlSeconds: number;
+    };
+  };
+  services: {
+    datagov: {
+      name: string;
+      status: string;
+      httpStatus: number;
+      latencyMs: number;
+      resourceId: string;
+    };
+    mas: {
+      name: string;
+      status: string;
+      httpStatus: number;
+      latencyMs: number;
+      resourceId: string;
+      fallbackActive: boolean;
+    };
+    dualLayerClientFailover: {
+      name: string;
+      status: string;
+      corsEnabled: boolean;
+    };
+  };
+  totalHealthCheckLatencyMs: number;
+}
+

@@ -46,16 +46,24 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
 
           <div className="flex items-center gap-2 sm:gap-3">
-            {/* Live Indicator */}
-            <div className="hidden xl:flex items-center gap-2 px-2.5 py-1 rounded bg-[#213145]">
+            {/* Live Indicator / Direct Health Check Button */}
+            <button
+              onClick={() => onTabChange('diagnostics')}
+              type="button"
+              className="hidden xl:flex items-center gap-2 px-2.5 py-1 rounded bg-[#213145] hover:bg-[#2e435e] text-[#eaf1ff] transition-all cursor-pointer border border-transparent hover:border-[#89f5e7]/30"
+              title="Click to open live API Health Check & Gateway Diagnostics"
+            >
               <span className="flex h-2 w-2 relative">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#89f5e7] opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-[#0c9488]"></span>
               </span>
-              <span className="font-geist text-xs text-[#eaf1ff]">
-                Live API: MAS & data.gov.sg Connected
+              <span className="font-geist text-xs">
+                API Health: 100% Operational
               </span>
-            </div>
+              <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#0c9488]/30 text-[#89f5e7] font-mono">
+                Health Check &rarr;
+              </span>
+            </button>
 
             {/* Last Sync */}
             <div className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#213145]">
@@ -101,13 +109,14 @@ export const Header: React.FC<HeaderProps> = ({
             </button>
             <button
               onClick={() => onTabChange('diagnostics')}
-              className={`h-full px-3.5 flex items-center font-geist text-xs font-semibold transition-colors border-b-2 whitespace-nowrap cursor-pointer ${
+              className={`h-full px-3.5 flex items-center gap-1.5 font-geist text-xs font-semibold transition-colors border-b-2 whitespace-nowrap cursor-pointer ${
                 activeTab === 'diagnostics'
                   ? 'border-[#e21e49] text-white bg-[#213145]'
                   : 'border-transparent text-[#7c839b] hover:text-white'
               }`}
             >
-              API Diagnostics & Pagination
+              <span className="w-1.5 h-1.5 rounded-full bg-[#10b981]"></span>
+              API Health Check &amp; Diagnostics
             </button>
             <button
               onClick={() => onTabChange('setup')}

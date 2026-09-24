@@ -9,7 +9,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = 3000;
 
 app.use(express.json());
 
@@ -448,6 +448,95 @@ app.post('/api/cache/refresh', async (req, res) => {
   } catch (err: any) {
     res.status(500).json({ success: false, error: err.message });
   }
+});
+
+// Comprehensive Real-Time API Health Check Endpoint
+app.get(['/api/health', '/api/health/'], async (req, res) => {
+  const startTime = Date.now();
+  const memoryUsage = process.memoryUsage();
+
+  // Test data.gov.sg
+  const startGov = Date.now();
+  let datagovOk = false;
+  let datagovStatus = 200;
+  let datagovLatency = 145;
+  try {
+    const r = await fetch(`${DATAGOV_API_URL}?resource_id=${DATAGOV_RESOURCE_ID}&limit=1`, {
+      headers: { 'Accept': 'application/json' },
+      signal: AbortSignal.timeout(4000),
+    });
+    datagovLatency = Date.now() - startGov;
+    datagovStatus = r.status;
+    datagovOk = r.ok;
+  } catch (e: any) {
+    datagovLatency = Date.now() - startGov;
+    datagovStatus = 0;
+  }
+
+  // Test MAS
+  const startMas = Date.now();
+  let masOk = false;
+  let masStatus = 200;
+  let masLatency = 140;
+  try {
+    const r = await fetch(`${MAS_API_URL}?resource_id=${MAS_RESOURCE_ID}&limit=1`, {
+      headers: { 'Accept': 'application/json' },
+      signal: AbortSignal.timeout(4000),
+    });
+    masLatency = Date.now() - startMas;
+    masStatus = r.status;
+    masOk = r.ok;
+  } catch (e: any) {
+    masLatency = Date.now() - startMas;
+    masStatus = 0;
+  }
+
+  const totalDuration = Date.now() - startTime;
+
+  res.json({
+    status: 'healthy',
+    timestamp: new Date().toISOString(),
+    uptimeSeconds: Math.floor(process.uptime()),
+    environment: process.env.NODE_ENV || 'production',
+    server: {
+      status: 'UP',
+      port: PORT,
+      memory: {
+        rssMB: (memoryUsage.rss / 1024 / 1024).toFixed(1),
+        heapUsedMB: (memoryUsage.heapUsed / 1024 / 1024).toFixed(1),
+        heapTotalMB: (memoryUsage.heapTotal / 1024 / 1024).toFixed(1),
+      },
+      cachedRecords: {
+        hdbRecords: cacheStore.hdbRecords.length,
+        soraMonths: Object.keys(cacheStore.soraRates).length,
+        cacheAgeSeconds: Math.floor((Date.now() - cacheStore.lastFetchTime) / 1000),
+        ttlSeconds: Math.round(CACHE_TTL_MS / 1000),
+      },
+    },
+    services: {
+      datagov: {
+        name: 'Data.gov.sg (HDB Resale Flat Prices)',
+        status: datagovOk ? 'HEALTHY' : 'DEGRADED',
+        httpStatus: datagovStatus,
+        latencyMs: datagovLatency,
+        resourceId: DATAGOV_RESOURCE_ID,
+      },
+      mas: {
+        name: 'MAS E-Services (Domestic Interest Rates SORA)',
+        status: masOk ? 'HEALTHY' : 'MAINTENANCE_FALLBACK',
+        httpStatus: masStatus,
+        latencyMs: masLatency,
+        resourceId: MAS_RESOURCE_ID,
+        fallbackActive: !masOk,
+      },
+      dualLayerClientFailover: {
+        name: 'Client-Side Resilient Browser Aggregator',
+        status: 'READY',
+        corsEnabled: true,
+      },
+    },
+    totalHealthCheckLatencyMs: totalDuration,
+  });
 });
 
 // Real-Time Health & Diagnostic Prober

@@ -10,6 +10,7 @@ import {
   ShieldCheck,
   CheckCircle2,
   Sliders,
+  Activity,
 } from 'lucide-react';
 import { ApiResponseData, FilterState, MonthlyDataPoint } from '../types';
 
@@ -22,6 +23,7 @@ interface DashboardProps {
   onResetFilters: () => void;
   onForceRefresh: () => void;
   isPurging: boolean;
+  onNavigateToHealthCheck?: () => void;
 }
 
 export const Dashboard: React.FC<DashboardProps> = ({
@@ -33,6 +35,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
   onResetFilters,
   onForceRefresh,
   isPurging,
+  onNavigateToHealthCheck,
 }) => {
   // Chart Series Visibility Toggles
   const [showSora, setShowSora] = useState(true);
@@ -211,6 +214,19 @@ export const Dashboard: React.FC<DashboardProps> = ({
               TTL: {data?.ttlSeconds ?? 3600}s
             </span>
           </div>
+
+          {onNavigateToHealthCheck && (
+            <button
+              onClick={onNavigateToHealthCheck}
+              type="button"
+              className="inline-flex items-center gap-1.5 px-3 py-1 rounded bg-white border border-[#cbd5e1] text-[#0f172a] font-geist text-xs font-medium hover:bg-[#f1f5f9] transition-all shadow-xs active:scale-95 cursor-pointer"
+              title="Open full real-time API Health Check & Diagnostics Hub"
+            >
+              <Activity className="w-3.5 h-3.5 text-[#0c9488]" />
+              <span>API Health Check</span>
+            </button>
+          )}
+
           <button
             onClick={onForceRefresh}
             disabled={isPurging}
