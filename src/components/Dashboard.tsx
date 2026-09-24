@@ -224,26 +224,49 @@ export const Dashboard: React.FC<DashboardProps> = ({
       </div>
 
       {/* Simulated Outage / Real Error Banner */}
-      {(error || isSimulatedError) && (
-        <div className="w-full bg-[#ffdad6] text-[#93000a] px-4 sm:px-8 py-3 flex items-center justify-between shadow-sm border-b border-[#ba1a1a]/20">
+      {!dismissError && (error || isSimulatedError) && (
+        <div className="w-full bg-[#ffdad6] text-[#93000a] px-4 sm:px-8 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm border-b border-[#ba1a1a]/20">
           <div className="flex items-center gap-3">
             <AlertTriangle className="w-5 h-5 text-[#ba1a1a] shrink-0" />
             <div className="flex flex-col">
               <span className="font-geist text-xs sm:text-sm font-bold">
-                API Handshake Interrupted (HTTP 503: Service Unavailable)
+                {isSimulatedError
+                  ? '[Simulation Active] Simulated 503 Outage Test'
+                  : 'Upstream Gateway Fallback Engaged'}
               </span>
               <span className="text-xs text-[#93000a]/90">
-                {error ||
-                  'MAS upstream gateway throttling request burst. Rendering local SWR stale fallback store from indexdb cache (Age: 42m).'}
+                {error
+                  ? `Server status: ${error}. Seamless client-side failover active.`
+                  : 'Displaying resilient statutory SORA series and verified data.gov.sg records.'}
               </span>
             </div>
           </div>
-          <button
-            onClick={() => setDismissError(true)}
-            className="font-geist text-xs underline px-2 cursor-pointer font-semibold"
-          >
-            Dismiss
-          </button>
+          <div className="flex items-center gap-2 self-end sm:self-auto">
+            {isSimulatedError ? (
+              <button
+                type="button"
+                onClick={() => setSimulationMode('normal')}
+                className="font-geist text-xs bg-[#ba1a1a] text-white px-2.5 py-1 rounded cursor-pointer font-semibold hover:bg-[#93000a] transition-colors"
+              >
+                End Simulation
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={onForceRefresh}
+                className="font-geist text-xs bg-[#ba1a1a] text-white px-2.5 py-1 rounded cursor-pointer font-semibold hover:bg-[#93000a] transition-colors"
+              >
+                Retry Gateway Sync
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() => setDismissError(true)}
+              className="font-geist text-xs underline px-2 cursor-pointer font-semibold"
+            >
+              Dismiss
+            </button>
+          </div>
         </div>
       )}
 

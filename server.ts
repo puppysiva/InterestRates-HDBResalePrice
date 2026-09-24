@@ -13,6 +13,17 @@ const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
 
+// Enable full CORS for client browsers and external tools
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(200);
+  }
+  next();
+});
+
 // Official Resource IDs & Endpoints
 const MAS_API_URL = 'https://eservices.mas.gov.sg/api/action/datastore/search.json';
 const MAS_RESOURCE_ID = '9a0bf14e-15e3-424e-973d-2338f019b53f';
@@ -206,7 +217,7 @@ function formatDisplayMonth(monthStr: string): string {
 }
 
 // Monthly Aggregation & Analytics Endpoint
-app.get('/api/data', async (req, res) => {
+app.get(['/api/data', '/api/data/'], async (req, res) => {
   try {
     const { timeHorizon = '3Y', town = 'ALL', flatType = 'ALL', tenor = '3M', forceRefresh } = req.query;
 

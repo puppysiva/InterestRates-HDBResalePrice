@@ -10,6 +10,7 @@ import { ApiDiagnostics } from './components/ApiDiagnostics';
 import { NextjsSetupGuide } from './components/NextjsSetupGuide';
 import { Footer } from './components/Footer';
 import { ApiResponseData, FilterState } from './types';
+import { fetchClientFallbackData } from './services/clientDataService';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<'dashboard' | 'diagnostics' | 'setup'>('dashboard');
@@ -44,15 +45,30 @@ export default function App() {
           forceRefresh: force ? 'true' : 'false',
         });
 
-        const res = await fetch(`/api/data?${queryParams.toString()}`);
-        if (!res.ok) {
-          throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+        // 1. Try server-side route
+        try {
+          const res = await fetch(`/api/data?${queryParams.toString()}`);
+          if (res.ok) {
+            const json: ApiResponseData = await res.json();
+            if (json && json.series && json.series.length > 0) {
+              setData(json);
+              setLoading(false);
+              setIsPurging(false);
+              return;
+            }
+          }
+          console.warn(`Server route /api/data returned HTTP ${res.status}. Seamlessly falling back to direct client aggregator.`);
+        } catch (serverErr) {
+          console.warn('Server fetch encountered network interruption, engaging client aggregator:', serverErr);
         }
-        const json: ApiResponseData = await res.json();
-        setData(json);
+
+        // 2. Direct browser-side resilient fallback to data.gov.sg
+        const fallbackData = await fetchClientFallbackData(filters);
+        setData(fallbackData);
+        setError(null);
       } catch (err: any) {
-        console.error('Fetch error:', err);
-        setError(err.message || 'Failed to communicate with Singapore API upstream gateway');
+        console.error('Data aggregation error:', err);
+        setError(err.message || 'Unable to communicate with Singapore API upstream gateway');
       } finally {
         setLoading(false);
         setIsPurging(false);
@@ -81,7 +97,7 @@ export default function App() {
   const handlePurgeCache = async () => {
     setIsPurging(true);
     try {
-      await fetch('/api/cache/refresh', { method: 'POST' });
+      await fetch('/api/cache/refresh', { method: 'POST' }).catch(() => {});
       await fetchData(true);
     } catch (e) {
       console.error('Purge error:', e);
