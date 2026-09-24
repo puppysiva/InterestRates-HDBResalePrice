@@ -1,0 +1,6 @@
+{
+  "name": "SG MacroProp - SORA Rates & HDB Resale Monitor",
+  "description": "Real-time macroeconomic intelligence platform comparing Monetary Authority of Singapore (MAS) SORA interest rates with Data.gov.sg HDB resale housing prices.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
